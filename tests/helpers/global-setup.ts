@@ -121,7 +121,10 @@ export default async function setup(project: TestProject) {
     // PostgreSQL refuses to run as root; fall back to the 'postgres' OS user.
     const asUser = (cmd: string, args: string[]) =>
       isRoot ? { cmd: "runuser", args: ["-u", "postgres", "--", cmd, ...args] } : { cmd, args };
-    if (isRoot) fs.chmodSync(base, 0o755), execFileSync("chown", ["postgres:postgres", base]);
+    if (isRoot) {
+      fs.chmodSync(base, 0o755);
+      execFileSync("chown", ["postgres:postgres", base]);
+    }
 
     const run = (cmd: string, args: string[]) => {
       const r = asUser(cmd, args);

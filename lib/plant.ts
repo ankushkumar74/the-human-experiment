@@ -26,6 +26,9 @@ export const STAGES: readonly Stage[] = [
 
 export const MAX_STAGE_INDEX = STAGES.length - 1;
 
+/** The first (and currently only) experiment. */
+export const DEFAULT_EXPERIMENT_SLUG = "save-the-plant";
+
 export const HEALTH = {
   initial: 70,
   min: 0,

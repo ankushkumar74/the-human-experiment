@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Design tokens ───────────────────────── */
+@theme {
+  --color-acid: #c8ff55;
+  --color-coral: #ff795e;
+  --color-lavender: #a98bff;
+  --color-cyan: #5cdde2;
+  --color-paper: #fff8ec;
+  --color-paper-deep: #f6ecd8;
+  --color-ink: #1c1a16;
+  --color-ink-soft: #5b564b;
+
+  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.75rem;
+  --shadow-chunk: 5px 5px 0 0 var(--color-ink);
+  --shadow-chunk-sm: 3px 3px 0 0 var(--color-ink);
+
+  --animate-wobble: wobble 3.6s ease-in-out infinite;
+  --animate-float: float 5s ease-in-out infinite;
+  --animate-drip: drip 0.9s ease-in forwards;
+
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-1.5deg); }
+    50% { transform: rotate(1.5deg); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes drip {
+    0% { transform: translateY(-30px); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: translateY(120px); opacity: 0; }
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background: var(--color-paper);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
+
+/* Pixel art must stay crisp when scaled. */
+.pixelated {
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
+
+/* ───────────────────────── Components ───────────────────────── */
+@layer components {
+  .card {
+    background: #fff;
+    border: 3px solid var(--color-ink);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-chunk);
+  }
+
+  .btn-chunky {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    background: var(--color-acid);
+    border: 3px solid var(--color-ink);
+    border-radius: 999px;
+    box-shadow: var(--shadow-chunk);
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  }
+  .btn-chunky:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0 0 var(--color-ink);
+  }
+  .btn-chunky:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: 1px 1px 0 0 var(--color-ink);
+  }
+  .btn-chunky:disabled {
+    cursor: not-allowed;
+    background: var(--color-paper-deep);
+    color: var(--color-ink-soft);
+    box-shadow: var(--shadow-chunk-sm);
+  }
+
+  .sticker {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    border: 2.5px solid var(--color-ink);
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    box-shadow: var(--shadow-chunk-sm);
+  }
+}
+
+/* Keyboard users always get a visible, high-contrast focus ring. */
+:focus-visible {
+  outline: 4px solid var(--color-lavender);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Honour the user's motion preference everywhere (components also check it). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

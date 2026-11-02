@@ -41,5 +41,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local development database (scripts/local-db.mjs)
+# (legacy) local development database location, now stored outside the project
 /.local-db/

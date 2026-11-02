@@ -52,6 +52,24 @@ function writeLastStage(stage: number) {
   }
 }
 
+const CONTRIBUTION_KEY = "he_last_contribution";
+
+function readContribution(): number | null {
+  try {
+    const n = Number(window.localStorage.getItem(CONTRIBUTION_KEY));
+    return Number.isSafeInteger(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+function writeContribution(n: number) {
+  try {
+    window.localStorage.setItem(CONTRIBUTION_KEY, String(n));
+  } catch {
+    /* storage blocked: the share link just falls back to the homepage */
+  }
+}
+
 let toastSeq = 0;
 
 export function ExperimentProvider({ children }: { children: ReactNode }) {
@@ -134,6 +152,11 @@ export function ExperimentProvider({ children }: { children: ReactNode }) {
   // Initial load, ~30s polling (paused while the tab is hidden), and recovery on reconnect.
   useEffect(() => {
     track("homepage_viewed");
+    // Remember the visitor's own watering number across reloads (device-local only).
+    const saved = setTimeout(() => {
+      const mine = readContribution();
+      if (mine) setContributionNumber(mine);
+    }, 0);
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
 
@@ -163,6 +186,7 @@ export function ExperimentProvider({ children }: { children: ReactNode }) {
     window.addEventListener("offline", onOffline);
     return () => {
       stopped = true;
+      clearTimeout(saved);
       if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
@@ -196,6 +220,7 @@ export function ExperimentProvider({ children }: { children: ReactNode }) {
         setOffline(false);
         applySnapshot(experiment);
         setContributionNumber(mine);
+        if (mine) writeContribution(mine);
         if (!duplicate) setBurst((n) => n + 1);
         pushToast({
           tone: "success",

@@ -8,25 +8,31 @@
  *   npm run db:local -- status
  *
  * Needs PostgreSQL 14+ server binaries (initdb, pg_ctl). It prints the
- * LOCAL_DATABASE_URL to put in .env.local. Data lives in ./.local-db (git-ignored).
+ * LOCAL_DATABASE_URL to put in .env.local. Data lives OUTSIDE the project (default
+ * ~/.cache/the-human-experiment/local-db, or LOCAL_DB_DIR) because PostgreSQL rewrites
+ * its files on every write, and `next dev` would otherwise reload the page each time.
  *
  * It mirrors the roles Supabase provisions (anon, authenticated, service_role)
  * so grants and Row Level Security behave as they will in production.
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const base = path.join(root, ".local-db");
+const isRoot = typeof process.getuid === "function" && process.getuid() === 0;
+// PostgreSQL refuses to run as root; as root it runs as the 'postgres' user, which cannot read /root.
+const base =
+  process.env.LOCAL_DB_DIR ??
+  (isRoot ? "/var/tmp/the-human-experiment-db" : path.join(os.homedir(), ".cache", "the-human-experiment", "local-db"));
 const data = path.join(base, "data");
 const migrationsDir = path.join(root, "supabase", "migrations");
 const port = Number(process.env.LOCAL_DB_PORT ?? 54329);
 const dbName = "human_experiment";
 const adminUrl = (db = "postgres") => `postgresql://postgres@127.0.0.1:${port}/${db}`;
-const isRoot = typeof process.getuid === "function" && process.getuid() === 0;
 
 // Keep in sync with tests/helpers/global-setup.ts (the test harness uses the same roles).
 const SUPABASE_BOOTSTRAP = `

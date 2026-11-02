@@ -212,3 +212,23 @@ export function gridToRects(rows: string[], mood: HealthMood, legendary = false)
   });
   return rects;
 }
+
+const SVG_DROOP: Record<HealthMood, number> = { thriving: 0, okay: -1, thirsty: -6, critical: -13 };
+
+/**
+ * The plant as a standalone SVG string (no React), for places that cannot render
+ * components: social share images and the site icon.
+ */
+export function plantToSvg(stage: number, mood: HealthMood, opts: { background?: string } = {}): string {
+  const s = Math.min(Math.max(Math.floor(stage), 0), STAGE_COUNT - 1);
+  const rects = gridToRects(buildPlantGrid(s, mood), mood, s === 6);
+  const rect = (r: PixelRect) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="1" fill="${r.fill}"/>`;
+  const plant = rects.filter((r) => r.plant).map(rect).join("");
+  const pot = rects.filter((r) => !r.plant).map(rect).join("");
+  const bg = opts.background ? `<rect width="${GRID_W}" height="${GRID_H}" fill="${opts.background}"/>` : "";
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${GRID_W} ${GRID_H}" shape-rendering="crispEdges">` +
+    bg +
+    `<g transform="rotate(${SVG_DROOP[mood]} 8 ${PLANT_ROWS})">${plant}</g>${pot}</svg>`
+  );
+}

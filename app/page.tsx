@@ -1,9 +1,11 @@
 import { ExperimentPanel } from "@/components/experiment/experiment-panel";
 import { ExperimentProvider } from "@/components/experiment/experiment-provider";
 import { PlantStage } from "@/components/experiment/plant-stage";
+import { HistorySection } from "@/components/history/history-section";
 import { HeroCopy } from "@/components/layout/hero-copy";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ShareSection } from "@/components/share/share-section";
 
 export default function HomePage() {
   return (
@@ -18,6 +20,10 @@ export default function HomePage() {
             <PlantStage className="lg:flex-1" />
           </div>
           <ExperimentPanel />
+        </div>
+        <div className="mt-12 space-y-14 sm:mt-16 sm:space-y-20">
+          <ShareSection />
+          <HistorySection />
         </div>
       </main>
       <SiteFooter />

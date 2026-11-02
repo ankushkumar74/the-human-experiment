@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import { createLocalDb } from "@/lib/db-local";
 import { requireEnv } from "@/lib/env";
 
 /**
@@ -33,6 +34,19 @@ export function setDbForTesting(db: Db | null): void {
 export function getDb(): Db {
   if (override) return override;
   if (cached) return cached;
+
+  // Development convenience: run against a local PostgreSQL (scripts/local-db.mjs)
+  // instead of Supabase. Impossible in production: NODE_ENV is inlined at build
+  // time, so this branch is removed from production bundles, and it is also
+  // refused on Vercel.
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.VERCEL !== "1" &&
+    process.env.LOCAL_DATABASE_URL
+  ) {
+    cached = createLocalDb(process.env.LOCAL_DATABASE_URL);
+    return cached;
+  }
 
   const client = createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),

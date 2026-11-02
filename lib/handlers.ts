@@ -10,6 +10,7 @@ import {
   parseSlug,
   readJsonObject,
 } from "@/lib/http";
+import { toHistory, type HistoryRpc } from "@/lib/history";
 import { DEFAULT_EXPERIMENT_SLUG } from "@/lib/plant";
 import { dbRateLimit, LIMITS, readLimiter } from "@/lib/rate-limit";
 import { toSnapshot, type GetStateRpc, type WaterRpc } from "@/lib/snapshot";
@@ -193,6 +194,55 @@ export async function handleWater(request: Request): Promise<Response> {
         // invalid_visitor or an unknown code means a bug on our side, not the caller's.
         throw new Error(`unexpected water_experiment code: ${data.code}`);
     }
+  } catch (err) {
+    return internalError(err);
+  }
+}
+
+// ── GET /api/history ──────────────────────────────────────────────────────────
+
+/**
+ * Aggregate history (per-day totals and reached milestones). It contains nothing
+ * about any individual visitor, so unlike the other endpoints it is safe to cache
+ * briefly at the edge, which keeps database load flat however many people view it.
+ */
+export async function handleHistory(request: Request): Promise<Response> {
+  const url = new URL(request.url); // outside try: see handleGetExperiment
+
+  try {
+    const secret = visitorSecret();
+    const slug = parseSlug(url.searchParams.get("slug"), DEFAULT_EXPERIMENT_SLUG);
+
+    const rawDays = url.searchParams.get("days");
+    const days = rawDays === null ? 14 : Number(rawDays);
+    if (!Number.isInteger(days) || days < 1 || days > 90) {
+      throw new HttpError(400, "invalid_request", "days must be a whole number from 1 to 90.");
+    }
+
+    if (!readLimiter.hit(`history:${hashIp(clientIp(request), secret)}`, LIMITS.readPerMinute, 60)) {
+      return errorResponse(429, "rate_limited", "Too many requests. Please slow down.", {}, {
+        "Retry-After": "30",
+      });
+    }
+
+    const { data, error } = await getDb().rpc<HistoryRpc>("get_experiment_history", {
+      p_slug: slug,
+      p_days: days,
+    });
+
+    if (error || !data) {
+      console.error("[api] get_experiment_history failed:", error?.message);
+      return TEMPORARILY_UNAVAILABLE();
+    }
+    if (!data.ok) {
+      return data.code === "not_found"
+        ? errorResponse(404, "not_found", "That experiment does not exist.")
+        : internalError(new Error(`unexpected get_experiment_history code: ${data.code}`));
+    }
+
+    return json(toHistory(data), 200, {
+      "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+    });
   } catch (err) {
     return internalError(err);
   }

@@ -69,6 +69,16 @@ describe("signing and verification", () => {
     expect(verifyVisitorCookie(signed.slice(0, -1) + last, SECRET)).toBeNull();
   });
 
+  it("accepts exactly one string per signature at every position (no non-canonical base64 variants)", () => {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    for (let run = 0; run < 20; run++) {
+      const id = randomUUID();
+      const signed = signVisitorId(id, SECRET);
+      const accepted = [...alphabet].filter((ch) => verifyVisitorCookie(signed.slice(0, -1) + ch, SECRET) !== null);
+      expect(accepted).toEqual([signed.at(-1)]);
+    }
+  });
+
   it.each([
     ["undefined", undefined],
     ["null", null],

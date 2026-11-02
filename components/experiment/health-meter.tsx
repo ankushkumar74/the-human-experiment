@@ -18,7 +18,7 @@ const LABEL: Record<HealthMood, string> = {
 };
 
 /** Chunky segmented health bar. `health` is null while the first load is in flight. */
-export function HealthMeter({ health }: { health: number | null }) {
+export function HealthMeter({ health, unavailable = false }: { health: number | null; unavailable?: boolean }) {
   const reduce = useReducedMotion();
   const known = health !== null;
   const mood = healthMood(health ?? 70);
@@ -34,7 +34,7 @@ export function HealthMeter({ health }: { health: number | null }) {
               <span className="text-ink-soft">/100 · {LABEL[mood]}</span>
             </>
           ) : (
-            <span className="text-ink-soft">checking…</span>
+            <span className="text-ink-soft">{unavailable ? "unavailable" : "checking…"}</span>
           )}
         </span>
       </div>
@@ -56,7 +56,7 @@ export function HealthMeter({ health }: { health: number | null }) {
             style={{ borderRightWidth: health === 0 ? 0 : 3 }}
           />
         ) : (
-          <div className="h-full w-1/3 animate-pulse bg-ink/10" />
+          <div className={`h-full w-1/3 bg-ink/10 ${unavailable ? "" : "animate-pulse"}`} />
         )}
         {/* segment ticks every 10 points make it feel like a game bar */}
         <div

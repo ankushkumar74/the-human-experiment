@@ -22,7 +22,9 @@ export function PixelPlant({ stage, health, animate = true, className, title }: 
   const mood = healthMood(health);
   const s = Math.min(Math.max(Math.floor(stage), 0), STAGE_COUNT - 1);
   const rects = gridToRects(buildPlantGrid(s, mood), mood, s === 6);
-  const label = title ?? `Pixel-art ${stageNameFor(s).toLowerCase()}, health ${health} out of 100`;
+  // title="" marks the plant as purely decorative (e.g. the logo): hidden from assistive tech.
+  const decorative = title === "";
+  const label = title || `Pixel-art ${stageNameFor(s).toLowerCase()}, health ${health} out of 100`;
 
   const plantRects = rects.filter((r) => r.plant);
   const potRects = rects.filter((r) => !r.plant);
@@ -31,11 +33,10 @@ export function PixelPlant({ stage, health, animate = true, className, title }: 
     <svg
       viewBox={`0 0 ${GRID_W} ${GRID_H}`}
       className={className}
-      role="img"
-      aria-label={label}
+      {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": label })}
       shapeRendering="crispEdges"
     >
-      <title>{label}</title>
+      {decorative ? null : <title>{label}</title>}
       <g
         className={animate ? "animate-wobble" : undefined}
         style={{ transformOrigin: `8px ${PLANT_ROWS}px`, transformBox: "view-box" }}

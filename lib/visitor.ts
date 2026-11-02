@@ -49,6 +49,10 @@ export function verifyVisitorCookie(raw: string | null | undefined, secret: stri
   if (separator !== "." || !isVisitorId(id) || !SIGNATURE.test(signature)) return null;
 
   const given = Buffer.from(signature, "base64url");
+  // Canonical encoding only. The last base64 character carries 2 unused bits, so several
+  // strings decode to the same bytes; accepting them would make one valid cookie
+  // appear as multiple different strings.
+  if (given.toString("base64url") !== signature) return null;
   const expected = mac(secret, "cookie", id.toLowerCase());
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
   return id.toLowerCase();

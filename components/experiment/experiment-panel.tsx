@@ -11,7 +11,8 @@ import { WaterButton } from "./water-button";
 
 /** The control panel: question, live numbers and the watering button. */
 export function ExperimentPanel() {
-  const { snapshot, offline } = useExperiment();
+  const { snapshot, offline, status } = useExperiment();
+  const failed = status === "error" && !snapshot;
   const now = useNow(15_000, serverNow);
 
   return (
@@ -37,8 +38,8 @@ export function ExperimentPanel() {
         </p>
       </div>
 
-      <HealthMeter health={snapshot?.health ?? null} />
-      <StageTrack totalWaterings={snapshot?.totalWaterings ?? null} stage={snapshot?.growthStage ?? null} />
+      <HealthMeter health={snapshot?.health ?? null} unavailable={failed} />
+      <StageTrack totalWaterings={snapshot?.totalWaterings ?? null} stage={snapshot?.growthStage ?? null} unavailable={failed} />
 
       {offline ? (
         <p role="status" className="rounded-xl border-[2.5px] border-ink bg-coral/30 px-3 py-2 text-sm font-medium">
@@ -50,9 +51,10 @@ export function ExperimentPanel() {
 
       <p className="text-center text-xs text-ink-soft">
         {snapshot
-          ? `Last updated ${now === null ? formatLocalTime(snapshot.updatedAt) : timeAgo(snapshot.updatedAt, now)}`
-          : " "}
-        {" · refreshes about every 30 seconds"}
+          ? `Last updated ${now === null ? formatLocalTime(snapshot.updatedAt) : timeAgo(snapshot.updatedAt, now)} · refreshes about every 30 seconds`
+          : failed
+            ? "Retrying automatically every 30 seconds"
+            : "\u00a0"}
       </p>
     </section>
   );

@@ -5,7 +5,15 @@ import { formatCount } from "@/lib/client/format";
 import { STAGES, stageProgress } from "@/lib/plant";
 
 /** Seven dots, one per growth stage, plus a progress bar towards the next one. */
-export function StageTrack({ totalWaterings, stage }: { totalWaterings: number | null; stage: number | null }) {
+export function StageTrack({
+  totalWaterings,
+  stage,
+  unavailable = false,
+}: {
+  totalWaterings: number | null;
+  stage: number | null;
+  unavailable?: boolean;
+}) {
   const reduce = useReducedMotion();
   const known = totalWaterings !== null && stage !== null;
   const progress = known ? stageProgress(totalWaterings) : null;
@@ -15,7 +23,7 @@ export function StageTrack({ totalWaterings, stage }: { totalWaterings: number |
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <span className="font-display text-sm font-bold uppercase tracking-wide">Growth stage</span>
         <span className="font-display text-sm font-bold">
-          {progress ? progress.current.name : <span className="text-ink-soft">checking…</span>}
+          {progress ? progress.current.name : <span className="text-ink-soft">{unavailable ? "unavailable" : "checking…"}</span>}
         </span>
       </div>
 
